@@ -3,7 +3,7 @@ time:2020 5 7
 '''
 import torch
 import torch.nn as nn
-from TensorLayerNorm_pytorch import tensor_layer_norm
+from .TensorLayerNorm_pytorch import tensor_layer_norm
 
 class CausalLSTMCell(nn.Module):
     def __init__(self, layer_name,num_hidden_in,num_hidden_out,

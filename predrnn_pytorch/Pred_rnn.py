@@ -5,8 +5,8 @@ time:2020 5 7
 '''
 import torch
 import torch.nn as nn
-from GradientHighway_pytorch import GHU as ghu
-from CausalLSTMCell_pytorch import CausalLSTMCell as cslstm
+from .GradientHighway_pytorch import GHU as ghu
+from .CausalLSTMCell_pytorch import CausalLSTMCell as cslstm
 
 
 class RNN(nn.Module):

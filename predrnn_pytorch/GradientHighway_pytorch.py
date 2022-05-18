@@ -2,7 +2,7 @@
 time: 2020 5 7
 '''
 
-from TensorLayerNorm_pytorch import tensor_layer_norm
+from .TensorLayerNorm_pytorch import tensor_layer_norm
 import torch
 import torch.nn as nn
 
