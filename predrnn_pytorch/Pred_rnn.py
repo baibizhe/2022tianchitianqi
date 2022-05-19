@@ -20,8 +20,8 @@ class RNN(nn.Module):
         self.shape = [shape[0], shape[2], shape[3], shape[4]]
         self.num_layers = num_layers
         self.num_hidden = num_hidden
-        cell_list = []
-        ghu_list = []
+        cell_list = nn.ModuleList()
+        ghu_list = nn.ModuleList()
 
         for i in range(self.num_layers):
             if i == 0:
@@ -76,7 +76,7 @@ class RNN(nn.Module):
         return out
 
 if __name__ == '__main__':
-    a = torch.randn(2, 8, 1, 250, 350)
+    a = torch.randn(2, 8, 1, 250, 350).cuda()
     shape = [2, 8, 1, 250, 350]
     numlayers = 4
     num_hidden = [1,1,1,1]
@@ -85,6 +85,7 @@ if __name__ == '__main__':
                  num_layers=numlayers, 
                  num_hidden=num_hidden,
                  seq_length=seq_length)
+    predrnn.cuda()
     predict = predrnn(a)
     print("numlayers  {} num_hidden {} seq_length              {}".format(numlayers,num_hidden,seq_length))
     
