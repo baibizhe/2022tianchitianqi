@@ -14,11 +14,10 @@ def main():
     # torch.autograd.set_detect_anomaly(True)
     parser = argparse.ArgumentParser()
     arg = parser.add_argument
-    arg("--batch-size", type=int, default=2
-
+    arg("--batch-size", type=int, default=40
         )
     arg("--epochs", type=int, default=1000)
-    arg("--lr", type=float, default=0.000005)
+    arg("--lr", type=float, default=0.005)
     arg("--optimizer", type=str, default="AdamW")
     arg("--resumePath", type=str, default='')
     arg(

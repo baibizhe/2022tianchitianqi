@@ -46,7 +46,7 @@ class CausalLSTMCell(nn.Module):
 
 
     def init_state(self):
-        return torch.zeros((self.batch, self.num_hidden_out,self.width,self.height),dtype=torch.float32)
+        return torch.zeros((self.batch, self.num_hidden_out,self.width,self.height),dtype=torch.float32).cuda()
 
     def forward(self,x,h,c,m):
         if h is None:

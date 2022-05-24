@@ -39,8 +39,10 @@ class RNN(nn.Module):
 
 
     def forward(self, images):
-        # [batch, length, channel, width, height]
 
+
+        # [batch, length, channel, width, height]
+        images = images.contiguous()
         batch = images.shape[0]
         height = images.shape[3]
         width = images.shape[4]
@@ -58,6 +60,8 @@ class RNN(nn.Module):
         for t in range(self.total_length):
             if t < self.input_length:
                 net = images[:,t]
+            # for module in self.cell_list:
+            #     module.cuda()
             h_t[0], c_t[0], m_t = self.cell_list[0](net, h_t[0], c_t[0], m_t)
             z_t = self.ghu_list[0](h_t[0],z_t)
             h_t[1], c_t[1], m_t = self.cell_list[1](z_t, h_t[1], c_t[1], m_t)
@@ -85,7 +89,7 @@ if __name__ == '__main__':
                  num_layers=numlayers, 
                  num_hidden=num_hidden,
                  seq_length=seq_length)
-    predrnn.cuda()
+    predrnn=predrnn.cuda()
     predict = predrnn(a)
     print("numlayers  {} num_hidden {} seq_length              {}".format(numlayers,num_hidden,seq_length))
     

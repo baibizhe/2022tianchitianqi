@@ -25,7 +25,7 @@ class GHU(nn.Module):
         self.x_concat_conv = nn.Conv2d(self.num_features,self.num_features*2,5,1,2)
 
     def init_state(self):
-        return torch.zeros((self.batch,self.num_features,self.width,self.height), dtype=torch.float32)
+        return torch.zeros((self.batch,self.num_features,self.width,self.height), dtype=torch.float32).cuda()
 
 
     def forward(self,x,z):
