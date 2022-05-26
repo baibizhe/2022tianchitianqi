@@ -1,7 +1,6 @@
 import argparse
-import os
 
-import torch
+from config import  config
 
 from train import train
 import os
@@ -16,7 +15,7 @@ def main():
     arg = parser.add_argument
     arg("--batch-size", type=int, default=40
         )
-    arg("--epochs", type=int, default=1000)
+    arg("--epochs", type=int, default=2)
     arg("--lr", type=float, default=0.005)
     arg("--optimizer", type=str, default="AdamW")
     arg("--resumePath", type=str, default='')
@@ -27,11 +26,17 @@ def main():
         help="For example 0,1 to run on two GPUs",
     )
     arg("--workers", type=int, default=6)
-
+    if not os.path.exists("outModels"):
+        try:
+            os.makedirs("outModels")
+        except:
+            pass
 
     args = parser.parse_args()
-    args.dataPath = os.path.join("data","TestA")
-    train(args)
+    config.update(vars(args))
+    print(config)
+
+    train(config)
 
 
 

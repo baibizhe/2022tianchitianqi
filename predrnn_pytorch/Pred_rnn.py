@@ -20,8 +20,8 @@ class RNN(nn.Module):
         self.shape = [shape[0], shape[2], shape[3], shape[4]]
         self.num_layers = num_layers
         self.num_hidden = num_hidden
-        cell_list = nn.ModuleList()
-        ghu_list = nn.ModuleList()
+        cell_list = []
+        ghu_list = []
 
         for i in range(self.num_layers):
             if i == 0:
@@ -39,10 +39,8 @@ class RNN(nn.Module):
 
 
     def forward(self, images):
-
-
         # [batch, length, channel, width, height]
-        images = images.contiguous()
+
         batch = images.shape[0]
         height = images.shape[3]
         width = images.shape[4]
@@ -60,8 +58,6 @@ class RNN(nn.Module):
         for t in range(self.total_length):
             if t < self.input_length:
                 net = images[:,t]
-            # for module in self.cell_list:
-            #     module.cuda()
             h_t[0], c_t[0], m_t = self.cell_list[0](net, h_t[0], c_t[0], m_t)
             z_t = self.ghu_list[0](h_t[0],z_t)
             h_t[1], c_t[1], m_t = self.cell_list[1](z_t, h_t[1], c_t[1], m_t)
@@ -80,17 +76,9 @@ class RNN(nn.Module):
         return out
 
 if __name__ == '__main__':
-    a = torch.randn(2, 8, 1, 250, 350).cuda()
-    shape = [2, 8, 1, 250, 350]
+    a = torch.randn(2, 6, 2, 250, 350)
+    shape = [2, 6, 2, 250, 350]
     numlayers = 4
-    num_hidden = [1,1,1,1]
-    seq_length= 20
-    predrnn= RNN(shape=shape, 
-                 num_layers=numlayers, 
-                 num_hidden=num_hidden,
-                 seq_length=seq_length)
-    predrnn=predrnn.cuda()
+    predrnn = RNN(shape, numlayers, [1,1,1,1], 6, True)
     predict = predrnn(a)
-    print("numlayers  {} num_hidden {} seq_length              {}".format(numlayers,num_hidden,seq_length))
-    
-    print("input shape {} outputshape {}".format(shape,predict.shape))
+    print(predict.shape)

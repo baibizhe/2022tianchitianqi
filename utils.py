@@ -32,6 +32,28 @@ class CustomTrainImageDataset(Dataset):
 
         return torch.tensor(image).squeeze(0), torch.tensor(label).squeeze(0)
 
+# class CustomTrainImageDataset(Dataset):
+#     def __init__(self, allImagePath, imgTransform=None, labelTransform=None):
+#         self.allImagePath = allImagePath
+#         self.imgTransform = imgTransform
+#         self.labelTransform = labelTransform
+#
+#     def __len__(self):
+#         return len(self.allImagePath["radar"])
+#
+#     def __getitem__(self, idx):
+#         rImage = np.expand_dims(read_image(self.allImagePath["radar"][idx][0:20]),0)
+#         pImage = np.expand_dims(read_image(self.allImagePath["precip"][idx][0:20]),0)
+#         wImage = np.expand_dims(read_image(self.allImagePath["wind"][idx][0:20]),0)
+#         allImage = np.vstack((rImage,pImage,wImage))
+#
+#         if self.imgTransform:
+#             image = self.imgTransform(allImage)
+#             label = self.imgTransform(allImage)
+#
+#
+#         return torch.tensor(image), torch.tensor(label)
+
 
 class CustomValidImageDataset(Dataset):
     def __init__(self, allImagePath, imgTransform=None, labelTransform=None):
@@ -56,7 +78,7 @@ def getTruePathsFromCsv(dataPath,csvPath):
 
     csvContent = pd.read_csv(csvPath,header=None)
     precip,radar,wind = [],[],[]
-    for i in range(len(csvContent[1])):
+    for i in range(0,len(csvContent[1]),10):
         imagesSingleRow = list(csvContent.iloc[i].values)
         radars = list(map(lambda x:os.path.join(dataPath,"Radar","radar_"+x),imagesSingleRow))
         precips = list(map(lambda x:os.path.join(dataPath,"Precip","precip_"+x),imagesSingleRow))
