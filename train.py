@@ -37,7 +37,8 @@ def train(args):
         lossFun = torch.nn.MSELoss()
         epochs=args.epochs
         scaler = GradScaler()
-        best_fid = 100000
+        # best_fid = 100000
+        best_loss =100
         with trange(epochs) as t:
             for epoch in t:
                 train_losses,train_fids,valid_fids,valid_losses, = AverageMeter(),AverageMeter(),AverageMeter(),AverageMeter()
@@ -56,16 +57,18 @@ def train(args):
 
                     scheduler.step()
                     train_losses.update(loss.item(),args.batch_size)
-                    if iter %  int(total_iter/10) == 0:
-                        fid = 0
-                        label = label.cpu().detach().squeeze(2).numpy()
-                        output = output.cpu().detach().squeeze(2).numpy()
-                        for i in range(len(label)):
-                            for j in range(len(label[i])):
-                                fid += calculate_fid(label[i][j],output[i][j])
-                        train_fids.update(fid,args.batch_size)
-                        print(" training iter {} / total {}  || epoch {} || loss {} || fid {}".
-                              format(iter,len(train_loader),epoch,train_losses.avg,train_fids.avg))
+                    # if iter %  int(total_iter/10) == 0:
+                    #     fid = 0
+                        # label = label.cpu().detach().squeeze(2).numpy()
+                        # output = output.cpu().detach().squeeze(2).numpy()
+                        # for i in range(len(label)):
+                        #     for j in range(len(label[i])):
+                        #         fid += calculate_fid(label[i][j],output[i][j])
+                        # train_fids.update(fid,args.batch_size)
+                        # print(" training iter {} / total {}  || epoch {} || loss {} || fid {}".
+                        #       format(iter,len(train_loader),epoch,train_losses.avg,train_fids.avg))
+                print(" training iter {} / total {}  || epoch {} || loss {} ".
+                      format(iter,len(train_loader),epoch,train_losses.avg))
                 for iter, (img, label) in enumerate(valid_loader):
                     with torch.no_grad():
                         img = img.unsqueeze(2).to(device)
@@ -74,20 +77,20 @@ def train(args):
                             output = model(img)
                             loss = lossFun(output, label)
                         valid_losses.update(loss.item(), args.batch_size)
-                        if iter % int(total_iter / 10) == 0:
-                            fid = 0
-                            label = label.cpu().detach().squeeze(2).numpy()
-                            output = output.cpu().detach().squeeze(2).numpy()
-                            for i in range(len(label)):
-                                for j in range(len(label[i])):
-                                    fid += calculate_fid(label[i][j], output[i][j])
-                                valid_fids.update(fid,args.batch_size)
-                            if valid_fids.avg < best_fid:
-                                torch.save(model.state_dict(),os.path.join("outModels",key+".pth"))
-                                best_fid = valid_fids.avg
-                                print("model saved")
-                            print("valid iter {} / total {}  || epoch {} || loss {} || fid {}".format(iter, len(valid_loader),
-                                                                                                epoch, loss.item(), fid))
+                        # if iter % int(total_iter / 10) == 0:
+                        #     fid = 0
+                        #     label = label.cpu().detach().squeeze(2).numpy()
+                        #     output = output.cpu().detach().squeeze(2).numpy()
+                        #     for i in range(len(label)):
+                        #         for j in range(len(label[i])):
+                        #             fid += calculate_fid(label[i][j], output[i][j])
+                        #         valid_fids.update(fid,args.batch_size)
+                        if valid_losses.avg < best_loss:
+                            torch.save(model.state_dict(),os.path.join("outModels",key+".pth"))
+                            best_loss = valid_losses.avg
+                            print("model saved")
+                        print("valid iter {} / total {}  || epoch {} || loss {} ".format(iter, len(valid_loader),
+                                                                                            epoch, loss.item()))
 
 
                 print("Loss : {}".format(loss.item()))

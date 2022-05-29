@@ -11,9 +11,10 @@ C.csvPath = os.path.join(C.dataPath,"train.csv")
 C.img_w = 224
 C.img_h = 224
 C.numlayers = 4
-C.num_hidden = [1, 1, 1, 1]
+C.num_hidden = [8, 8,8, 8]
 C.seq_length = 20
 C.warmup_epochs =3
 C.T_mult = 2
+C.workers = 3
 
 

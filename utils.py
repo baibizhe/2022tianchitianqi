@@ -5,13 +5,12 @@ import pandas as pd
 import os
 import numpy as np
 import torch
+
+
 def read_image(first20Path):
-
     return  np.asarray([imread(singleImg) for singleImg in first20Path])
-
-
-def read_label(last20Path):
-    return  np.asarray([imread(singleImg) for singleImg in last20Path])
+def read_label(last20Path,key):
+    return read_image(last20Path)
 class CustomTrainImageDataset(Dataset):
     def __init__(self, allImagePath, imgTransform=None, labelTransform=None):
         self.allImagePath = allImagePath
@@ -74,6 +73,22 @@ class CustomValidImageDataset(Dataset):
 
 
         return torch.tensor(image).squeeze(0), torch.tensor(label).squeeze(0)
+
+class CustomInferImageDataset(Dataset):
+    def __init__(self, allImagePath, imgTransform=None):
+        self.allImagePath = allImagePath
+        self.imgTransform = imgTransform
+
+    def __len__(self):
+        return len(self.allImagePath)
+
+    def __getitem__(self, idx):
+        image = readImgFromDir(self.allImagePath[idx])
+
+        if self.imgTransform:
+            image = self.imgTransform(np.expand_dims(image, 0))
+
+        return torch.tensor(image).squeeze(0),self.allImagePath[idx]
 def getTruePathsFromCsv(dataPath,csvPath):
 
     csvContent = pd.read_csv(csvPath,header=None)
@@ -154,9 +169,18 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     tr_covmean = np.trace(covmean)
 
     return diff.dot(diff) + np.trace(sigma1) + np.trace(sigma2) - 2 * tr_covmean
+
+def readImgFromDir(singleVolumeDir):
+    volume = np.zeros(shape=(20,480,560))
+    allImgs = os.listdir(singleVolumeDir)
+
+    for i  in range(len(allImgs)):
+        img = imread(os.path.join(singleVolumeDir,allImgs[i]))
+        volume[i,:,:] = img
+    return volume
 if __name__ == '__main__':
     a = np.random.random(size=(2, 20, 1, 480, 560))
     b = np.random.random(size=(2, 20, 1, 480, 560))
     mua = np.mean(a,0)
     mub = np.mean(a,0)
-    print(ca)
+    print(a)
