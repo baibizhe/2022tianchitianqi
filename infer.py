@@ -38,8 +38,12 @@ def getTruePathForInfer():
 
 def image_write(image: object, write_path, key: object) -> object:
     factorDict={"radar":70,"precip":35,"wind":10}
-    image=np.clip(np.array(image),0,factorDict[key])/factorDict[key]*255.
+
+    # image=np.clip(np.array(image),0,factorDict[key])/factorDict[key]*255.
+    image=np.clip(np.array(image),0,factorDict[key])
+
     cv2.imwrite(write_path,image)
+
 
 
 def imageWriteVolume(output:np.ndarray,key:str,path:str):
@@ -59,7 +63,7 @@ def imageWriteVolume(output:np.ndarray,key:str,path:str):
         # try:
         image_write(output[i-1,:,:],imgPath,key)
         # except :
-        print(imgPath,key)
+        # print(imgPath,key)
 
 
 
@@ -94,10 +98,17 @@ def infer(args,resize_data):
         for (batch,path) in infer_loader:
             with torch.no_grad():
                 model.to(device)
+                # print(batch.max(),torch.mean(batch),"batch")
+
                 batch=batch.unsqueeze(2).float().to(device)
+
                 output = resizeToOriginal(model(batch).squeeze(2).cpu().numpy()).squeeze(0)
+                #
+                # print("input max:{} input min:{}  output manx:{} output min {}".format(torch.max(batch),torch.min(batch),
+                #                                                                        np.max(output),np.min(output)))
+
                 imageWriteVolume(output,key,path[0])
-                print(output.shape)
+                # print(output.shape)
             # print(model(batch).shape)
 
 
@@ -105,7 +116,7 @@ def infer(args,resize_data):
 
 if __name__ == '__main__':
 
-    # infer(args=config,resize_data=(224,224))
+    infer(args=config,resize_data=(224,224))
     import zipfile
 
 

@@ -12,17 +12,18 @@ def read_image(first20Path):
 def read_label(last20Path,key):
     return read_image(last20Path)
 class CustomTrainImageDataset(Dataset):
-    def __init__(self, allImagePath, imgTransform=None, labelTransform=None):
+    def __init__(self, allImagePath, factor,imgTransform=None, labelTransform=None):
         self.allImagePath = allImagePath
         self.imgTransform = imgTransform
         self.labelTransform = labelTransform
+        self.factor = factor
 
     def __len__(self):
         return len(self.allImagePath)
 
     def __getitem__(self, idx):
-        image = read_image(self.allImagePath[idx][0:20])
-        label = read_image(self.allImagePath[idx][20:])
+        image = read_image(self.allImagePath[idx][0:20])/255*self.factor
+        label = read_image(self.allImagePath[idx][20:])/255*self.factor
 
         if self.imgTransform:
             image = self.imgTransform(np.expand_dims(image,0))
@@ -55,17 +56,18 @@ class CustomTrainImageDataset(Dataset):
 
 
 class CustomValidImageDataset(Dataset):
-    def __init__(self, allImagePath, imgTransform=None, labelTransform=None):
+    def __init__(self, allImagePath, factor,imgTransform=None, labelTransform=None):
         self.allImagePath = allImagePath
         self.imgTransform = imgTransform
         self.labelTransform = labelTransform
+        self.factor = factor
 
     def __len__(self):
         return len(self.allImagePath)
 
     def __getitem__(self, idx):
-        image = read_image(self.allImagePath[idx][0:20])
-        label = read_image(self.allImagePath[idx][20:])
+        image = read_image(self.allImagePath[idx][0:20])/255*self.factor
+        label = read_image(self.allImagePath[idx][20:])/255*self.factor
 
         if self.imgTransform:
             image = self.imgTransform(np.expand_dims(image,0))
@@ -75,15 +77,16 @@ class CustomValidImageDataset(Dataset):
         return torch.tensor(image).squeeze(0), torch.tensor(label).squeeze(0)
 
 class CustomInferImageDataset(Dataset):
-    def __init__(self, allImagePath, imgTransform=None):
+    def __init__(self, allImagePath, factor,imgTransform=None):
         self.allImagePath = allImagePath
         self.imgTransform = imgTransform
+        self.factor =  factor
 
     def __len__(self):
         return len(self.allImagePath)
 
     def __getitem__(self, idx):
-        image = readImgFromDir(self.allImagePath[idx])
+        image = readImgFromDir(self.allImagePath[idx],factor=self.factor)
 
         if self.imgTransform:
             image = self.imgTransform(np.expand_dims(image, 0))
@@ -170,12 +173,14 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
 
     return diff.dot(diff) + np.trace(sigma1) + np.trace(sigma2) - 2 * tr_covmean
 
-def readImgFromDir(singleVolumeDir):
+def readImgFromDir(singleVolumeDir,factor):
     volume = np.zeros(shape=(20,480,560))
     allImgs = os.listdir(singleVolumeDir)
+    # print(np.max(image),np.min(image))
 
+    # image=np.clip(np.array(image),0,factorDict[key])/factorDict[key]*255.
     for i  in range(len(allImgs)):
-        img = imread(os.path.join(singleVolumeDir,allImgs[i]))
+        img = imread(os.path.join(singleVolumeDir,allImgs[i]))/255*factor
         volume[i,:,:] = img
     return volume
 if __name__ == '__main__':

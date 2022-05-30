@@ -5,11 +5,13 @@ from tqdm import trange
 from predrnn_pytorch import RNN
 from utils import getTruePathsFromCsv, CustomTrainImageDataset
 from torch.optim import  AdamW
+from tqdm import *
+
 from utils import  calculate_fid
 from timm.utils import  AverageMeter
 import torchio as tio
 from torch.cuda.amp import autocast, GradScaler
-
+import  numpy as np
 def train(args):
 
     print(torch.cuda.is_available())
@@ -20,16 +22,18 @@ def train(args):
 
     resize =    tio.Resize(target_shape=target_size)
     trainTransform = tio.Compose([
-        resize,
+        # resize,
     ])
 
 
     dataPaths = getTruePathsFromCsv(dataPath, csvPath)
     for key in dataPaths.keys():
+
         print("training {}".format(key))
         device, model = get_model(args)
+        model = torch.nn.DataParallel(model,args.gpu_ids,args.gpu_ids[0])
         train_loader, valid_loader = getDataLoaders(args, dataPaths, key, trainTransform)
-        warmup_epochs = 3
+        warmup_epochs = 2
         T_mult = 2
         optimizer = eval(args.optimizer)(model.parameters(), lr=args.lr, weight_decay=1e-5)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=warmup_epochs,
@@ -43,8 +47,10 @@ def train(args):
             for epoch in t:
                 train_losses,train_fids,valid_fids,valid_losses, = AverageMeter(),AverageMeter(),AverageMeter(),AverageMeter()
                 t.set_description('Epoch %i' % epoch)
-                total_iter = len(train_loader)
+                pbar = tqdm(total=len(train_loader))
+
                 for iter, (img,label) in enumerate(train_loader):
+                    pbar.set_description('Iter  %i' % iter)
                     img = img.unsqueeze(2).to(device)
                     label = label.unsqueeze(2).to(device)
                     optimizer.zero_grad()
@@ -54,7 +60,8 @@ def train(args):
                     scaler.scale(loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
-
+                    # print("input max:{} input min:{}  output manx:{} output min {}".format(torch.max(img),torch.min(img),
+                    #                                                                        torch.max(output),torch.min(output)))
                     scheduler.step()
                     train_losses.update(loss.item(),args.batch_size)
                     # if iter %  int(total_iter/10) == 0:
@@ -67,6 +74,9 @@ def train(args):
                         # train_fids.update(fid,args.batch_size)
                         # print(" training iter {} / total {}  || epoch {} || loss {} || fid {}".
                         #       format(iter,len(train_loader),epoch,train_losses.avg,train_fids.avg))
+                    pbar.set_postfix({"Train loss ": loss.item()})
+
+                    pbar.update(1)
                 print(" training iter {} / total {}  || epoch {} || loss {} ".
                       format(iter,len(train_loader),epoch,train_losses.avg))
                 for iter, (img, label) in enumerate(valid_loader):
@@ -101,12 +111,12 @@ def train(args):
 
 def get_model(args):
     seq_length = 20
-    img_w, img_h = 224, 224
+    img_w, img_h = args.img_w, args.img_h
     target_size = (seq_length, img_w, img_h)
     shape = [args.batch_size, seq_length, 1, img_w, img_h]
     shape.extend(list(target_size))
     numlayers = 4
-    num_hidden = [1, 1, 1, 1]
+    num_hidden = args.num_hidden
     device = torch.device("cuda:%d" % 0) if torch.cuda.is_available() else torch.device("cpu")
     radarRNN = RNN(shape=shape,
                    num_layers=numlayers,
@@ -123,10 +133,12 @@ def getDataLoaders(args, dataPaths, key, trainTransform):
     splitIndex = int(len(singleDataPaths) * 0.8)
     trainPaths = singleDataPaths[0:splitIndex]
     validPaths = singleDataPaths[splitIndex:]
-    radarTrainDataset = CustomTrainImageDataset(trainPaths, imgTransform=trainTransform)
+    factorDict={"radar":70,"precip":35,"wind":10}
+    factor = factorDict[key]
+    radarTrainDataset = CustomTrainImageDataset(trainPaths, imgTransform=trainTransform,factor=factor)
     train_loader = torch.utils.data.DataLoader(radarTrainDataset, batch_size=args.batch_size, num_workers=args.workers,
                                                shuffle=True, prefetch_factor=4, pin_memory=True, drop_last=True)
-    radarValidDataset = CustomTrainImageDataset(validPaths, imgTransform=trainTransform)
+    radarValidDataset = CustomTrainImageDataset(validPaths, imgTransform=trainTransform,factor=factor)
     valid_loader = torch.utils.data.DataLoader(radarValidDataset, batch_size=args.batch_size, num_workers=args.workers,
                                                shuffle=False, prefetch_factor=4, pin_memory=True, drop_last=True)
     print("train length {}  valid length {}".format(len(trainPaths), len(validPaths)))
