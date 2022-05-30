@@ -99,8 +99,8 @@ def train(args):
                             torch.save(model.state_dict(),os.path.join("outModels",key+".pth"))
                             best_loss = valid_losses.avg
                             print("model saved")
-                        print("valid iter {} / total {}  || epoch {} || loss {} ".format(iter, len(valid_loader),
-                                                                                            epoch, loss.item()))
+                        # print("valid iter {} / total {}  || epoch {} || loss {} ".format(iter, len(valid_loader),
+                                                                                            # epoch, loss.item()))
 
 
                 print("Loss : {}".format(loss.item()))
