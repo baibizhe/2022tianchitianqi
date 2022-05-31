@@ -71,7 +71,7 @@ def imageWriteVolume(output:np.ndarray,key:str,path:str):
 
 
 
-def infer(args,resize_data):
+def infer(args):
     if not os.path.exists("submit"):
         try:
             os.makedirs("submit")
@@ -116,7 +116,7 @@ def infer(args,resize_data):
 
 if __name__ == '__main__':
 
-    infer(args=config,resize_data=(224,224))
+    infer(args=config)
     import zipfile
 
 

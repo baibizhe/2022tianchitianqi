@@ -28,7 +28,8 @@ def train(args):
 
     dataPaths = getTruePathsFromCsv(dataPath, csvPath)
     for key in dataPaths.keys():
-
+        if key == "precip":
+            continue
         print("training {}".format(key))
         device, model = get_model(args)
         model = torch.nn.DataParallel(model,args.gpu_ids,args.gpu_ids[0])
